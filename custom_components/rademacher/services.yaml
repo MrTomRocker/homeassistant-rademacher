@@ -1,0 +1,26 @@
+send_generic_device_command:
+  name: Send generic device command
+  description: Send a generic command to a Rademacher HomePilot device. Use with caution. You can do a 'curl <HomePilot_IP>/devices/<device_id>' to see what is possible.
+  fields:
+    entity_id:
+      name: Entity
+      description: The entity ID of the Rademacher device
+      required: true
+      example: "cover.my_shutter"
+      selector:
+        entity:
+          integration: rademacher
+    command:
+      name: Command
+      description: The command to send to the device
+      required: true
+      example: "CONTACT_OPEN_CMD"
+      selector:
+        text:
+    value:
+      name: Value
+      description: The value for the command
+      required: true
+      example: "true"
+      selector:
+        text:
