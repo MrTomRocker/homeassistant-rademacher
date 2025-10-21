@@ -83,7 +83,7 @@ class HomePilotEntity(CoordinatorEntity):
             "model": self.model,
             "model_id": str(self.did),
             "manufacturer": "Rademacher",
-            "serial_number": device.uid.split('_')[0] if device.uid else "unknown",
+            "serial_number": device.uid.split('_')[0] if device.uid else None,
         }
         
         # Only add configuration_url for Rademacher HomePilot (have Web UI)
