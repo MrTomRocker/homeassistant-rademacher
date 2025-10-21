@@ -2,11 +2,6 @@
 import asyncio
 from datetime import timedelta
 import logging
-import voluptuous as vol
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import entity_registry as er
-from homeassistant.exceptions import ServiceValidationError
-from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
 
 from homepilot.api import AuthError, HomePilotApi
 from homepilot.hub import HomePilotHub
@@ -33,25 +28,11 @@ from homeassistant.helpers.entity_registry import async_migrate_entries
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+from .services import async_register_services
 
 # List of platforms to support. There should be a matching .py file for each,
 # eg <cover.py> and <sensor.py>
 PLATFORMS = ["cover", "button", "switch", "sensor", "binary_sensor", "climate", "light", "number", "update", "scene"]
-
-# service constants
-SERVICE_SEND_GENERIC_COMMAND = "send_generic_device_command"
-ATTR_ENTITY_ID = "entity_id"
-ATTR_COMMAND = "command"
-ATTR_VALUE = "value"
-
-# schema for service
-SERVICE_SEND_GENERIC_COMMAND_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_COMMAND): cv.string,
-        vol.Required(ATTR_VALUE): vol.Any(cv.string),
-    }
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,81 +88,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
     # instance that has been created in the UI.
     hass.data.setdefault(DOMAIN, {})
 
-    async def async_send_generic_command(call: ServiceCall) -> ServiceResponse:
-        """Handle the send_generic_device_command service call."""
-        entity_id = call.data[ATTR_ENTITY_ID]
-        command = call.data[ATTR_COMMAND]
-        value = call.data[ATTR_VALUE]
-
-        #validate
-        entity_registry = er.async_get(hass)
-        entity_entry = entity_registry.async_get(entity_id)
-
-        if entity_entry is None:
-            raise ServiceValidationError(
-                f"Entity {entity_id} not found in entity registry"
-            )
-
-        if entity_entry.platform != DOMAIN:
-            raise ServiceValidationError(
-                f"Entity {entity_id} does not belong to the {DOMAIN} integration"
-            )
-
-        comp = hass.data["entity_components"][entity_id.split(".")[0]]
-        entity = comp.get_entity(entity_id)        
-        if entity is None:
-            raise ServiceValidationError(
-                f"Entity {entity_id} not found in entity component"
-            )
-        if not hasattr(entity, "did"):
-            raise ServiceValidationError(
-                f"Entity {entity_id} is not a Rademacher HomePilot entity"
-            )
-        did = entity.did    
-    
-        config_entry_id = entity_entry.config_entry_id
-        if config_entry_id not in hass.data[DOMAIN]:
-            raise ServiceValidationError(
-                f"Config entry for entity {entity_id} is not loaded"
-            )
-
-        manager = hass.data[DOMAIN][config_entry_id][0]
-        api = manager.api  
-
-        try:            
-            _LOGGER.info(
-                "Sending command '%s' with value '%s' to device %s (entity: %s)",
-                command,
-                value,
-                did,
-                entity_id
-            )            
-            
-            response = await api.async_send_device_command(
-                did=did,
-                command=command,
-                value=value
-            )
-            
-            _LOGGER.debug("API response: %s", response)            
-            return {"response": response}
-            
-        except AuthError as err:
-            raise ServiceValidationError(
-                f"Authentication failed for entity {entity_id}: {err}"
-            ) from err
-        except Exception as err:
-            raise ServiceValidationError(
-                f"Failed to send command '{command}' to entity {entity_id}: {err}"
-            ) from err
-    
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SEND_GENERIC_COMMAND,
-        async_send_generic_command,
-        schema=SERVICE_SEND_GENERIC_COMMAND_SCHEMA,
-        supports_response=SupportsResponse.OPTIONAL,
-    )
+    # Register all services
+    await async_register_services(hass)
 
     return True
 
