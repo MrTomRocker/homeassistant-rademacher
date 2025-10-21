@@ -129,7 +129,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
         comp = hass.data["entity_components"][entity_id.split(".")[0]]
         entity = comp.get_entity(entity_id)        
-    
+        if entity is None:
+            raise ServiceValidationError(
+                f"Entity {entity_id} not found in entity component"
+            )
         if not hasattr(entity, "did"):
             raise ServiceValidationError(
                 f"Entity {entity_id} is not a Rademacher HomePilot entity"
@@ -165,11 +168,11 @@ async def async_setup(hass: HomeAssistant, config: dict):
             
         except AuthError as err:
             raise ServiceValidationError(
-                f"Authentication failed for device {entity_entry.did}: {err}"
+                f"Authentication failed for entity {entity_id}: {err}"
             ) from err
         except Exception as err:
             raise ServiceValidationError(
-                f"Failed to send command '{command}' to device {entity_entry.did}: {err}"
+                f"Failed to send command '{command}' to entity {entity_id}: {err}"
             ) from err
     
     hass.services.async_register(

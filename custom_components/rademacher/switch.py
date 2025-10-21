@@ -236,7 +236,7 @@ class HomePilotVentilationSwitchEntity(HomePilotEntity, SwitchEntity):
             await self.async_turn_on()
 
 class HomePilotAutoModeEntity(HomePilotEntity, SwitchEntity):
-    """This class represents the Switch which controls Ventilation Position Mode."""
+    """This class represents the Switch which controls Auto Mode."""
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, device: HomePilotDevice
@@ -277,7 +277,7 @@ class HomePilotAutoModeEntity(HomePilotEntity, SwitchEntity):
             await self.async_turn_on()
 
 class HomePilotTimeAutoModeEntity(HomePilotEntity, SwitchEntity):
-    """This class represents the Switch which controls Ventilation Position Mode."""
+    """This class represents the Switch which controls Time Auto Mode."""
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, device: HomePilotDevice
@@ -319,7 +319,7 @@ class HomePilotTimeAutoModeEntity(HomePilotEntity, SwitchEntity):
             await self.async_turn_on()            
 
 class HomePilotContactAutoModeEntity(HomePilotEntity, SwitchEntity):
-    """This class represents the Switch which controls Ventilation Position Mode."""
+    """This class represents the Switch which controls Contact Auto Mode."""
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, device: HomePilotDevice
@@ -361,7 +361,7 @@ class HomePilotContactAutoModeEntity(HomePilotEntity, SwitchEntity):
             await self.async_turn_on()                      
 
 class HomePilotWindAutoModeEntity(HomePilotEntity, SwitchEntity):
-    """This class represents the Switch which controls Ventilation Position Mode."""
+    """This class represents the Switch which controls Wind Auto Mode."""
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, device: HomePilotDevice
@@ -403,7 +403,7 @@ class HomePilotWindAutoModeEntity(HomePilotEntity, SwitchEntity):
             await self.async_turn_on()                
 
 class HomePilotDawnAutoModeEntity(HomePilotEntity, SwitchEntity):
-    """This class represents the Switch which controls Ventilation Position Mode."""
+    """This class represents the Switch which controls Dawn Auto Mode."""
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, device: HomePilotDevice
@@ -445,7 +445,7 @@ class HomePilotDawnAutoModeEntity(HomePilotEntity, SwitchEntity):
             await self.async_turn_on()            
 
 class HomePilotDuskAutoModeEntity(HomePilotEntity, SwitchEntity):
-    """This class represents the Switch which controls Ventilation Position Mode."""
+    """This class represents the Switch which controls Dusk Auto Mode."""
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, device: HomePilotDevice
@@ -487,7 +487,7 @@ class HomePilotDuskAutoModeEntity(HomePilotEntity, SwitchEntity):
             await self.async_turn_on()                    
 
 class HomePilotRainAutoModeEntity(HomePilotEntity, SwitchEntity):
-    """This class represents the Switch which controls Ventilation Position Mode."""
+    """This class represents the Switch which controls Rain Auto Mode."""
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, device: HomePilotDevice
@@ -529,7 +529,7 @@ class HomePilotRainAutoModeEntity(HomePilotEntity, SwitchEntity):
             await self.async_turn_on()        
 
 class HomePilotSunAutoModeEntity(HomePilotEntity, SwitchEntity):
-    """This class represents the Switch which controls Ventilation Position Mode."""
+    """This class represents the Switch which controls Sun Auto Mode."""
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, device: HomePilotDevice

@@ -1,6 +1,9 @@
 send_generic_device_command:
   name: Send generic device command
-  description: Send a generic command to a Rademacher HomePilot device. Use with caution. You can do a 'curl <HomePilot_IP>/devices/<device_id>' to see what is possible.
+  description: >
+    Send a generic command to a Rademacher HomePilot device. Use with caution.
+    To see available commands, open this URL: http://<HomePilot_IP>/devices/<device_id>
+    You can find the device_id in the device view - it's shown in parentheses in the model description (e.g., "Actuator DuoFern Multiple Wall Controller 230V (170)").
   fields:
     entity_id:
       name: Entity
