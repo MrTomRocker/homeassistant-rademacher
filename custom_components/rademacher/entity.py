@@ -18,6 +18,7 @@ class HomePilotEntity(CoordinatorEntity):
         device_class=None,
         entity_category=None,
         icon=None,
+        entity_registry_enabled_default=True,
     ):
         super().__init__(coordinator)
         self._unique_id = unique_id
@@ -28,6 +29,7 @@ class HomePilotEntity(CoordinatorEntity):
         self._icon = icon
         self._did = device.did
         self._model = device.model
+        self._entity_registry_enabled_default = entity_registry_enabled_default
 
     @property
     def did(self):
@@ -86,3 +88,7 @@ class HomePilotEntity(CoordinatorEntity):
     def extra_state_attributes(self) -> Mapping[str, Any]:
         device: HomePilotDevice = self.coordinator.data[self.did]
         return getattr(device, "extra_attributes")
+
+    @property
+    def entity_registry_enabled_default(self):
+        return self._entity_registry_enabled_default

@@ -289,6 +289,7 @@ class HomePilotTimeAutoModeEntity(HomePilotEntity, SwitchEntity):
             name=f"{device.name} Time Auto Mode",
             device_class=SwitchDeviceClass.SWITCH.value,
             entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
         )
 
     @property
@@ -330,6 +331,7 @@ class HomePilotContactAutoModeEntity(HomePilotEntity, SwitchEntity):
             name=f"{device.name} Contact Auto Mode",
             device_class=SwitchDeviceClass.SWITCH.value,
             entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
         )
 
     @property
@@ -371,6 +373,7 @@ class HomePilotWindAutoModeEntity(HomePilotEntity, SwitchEntity):
             name=f"{device.name} Wind Auto Mode",
             device_class=SwitchDeviceClass.SWITCH.value,
             entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
         )
 
     @property
@@ -412,6 +415,7 @@ class HomePilotDawnAutoModeEntity(HomePilotEntity, SwitchEntity):
             name=f"{device.name} Dawn Auto Mode",
             device_class=SwitchDeviceClass.SWITCH.value,
             entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
         )
 
     @property
@@ -453,6 +457,7 @@ class HomePilotDuskAutoModeEntity(HomePilotEntity, SwitchEntity):
             name=f"{device.name} Dusk Auto Mode",
             device_class=SwitchDeviceClass.SWITCH.value,
             entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
         )
 
     @property
@@ -494,6 +499,7 @@ class HomePilotRainAutoModeEntity(HomePilotEntity, SwitchEntity):
             name=f"{device.name} Rain Auto Mode",
             device_class=SwitchDeviceClass.SWITCH.value,
             entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
         )
 
     @property
@@ -535,6 +541,7 @@ class HomePilotSunAutoModeEntity(HomePilotEntity, SwitchEntity):
             name=f"{device.name} Sun Auto Mode",
             device_class=SwitchDeviceClass.SWITCH.value,
             entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
         )
 
     @property

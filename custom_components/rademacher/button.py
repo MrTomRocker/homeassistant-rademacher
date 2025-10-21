@@ -45,15 +45,12 @@ class HomePilotPingButtonEntity(HomePilotEntity, ButtonEntity):
             device,
             unique_id=f"{device.uid}_ping",
             name=f"{device.name} Ping",
+            entity_registry_enabled_default=False,
         )
 
     @property
     def entity_category(self):
         return EntityCategory.DIAGNOSTIC
-
-    @property
-    def entity_registry_enabled_default(self):
-        return False
 
     @property
     def available(self):
