@@ -70,14 +70,29 @@ class HomePilotEntity(CoordinatorEntity):
     @property
     def device_info(self):
         """Information about this entity/device."""
-        return {
-            "identifiers": {(DOMAIN, self.did)},
-            # If desired, the name for the device could be different to the entity
+        # Use config entry unique_id (MAC address) + device_id for unique identifier
+        hub_mac = self.coordinator.config_entry.unique_id or "unknown"
+        device_identifier = f"{hub_mac}_{self.did}"
+        device: HomePilotDevice = self.coordinator.data[self.did]
+        
+        # Build device info
+        device_info = {
+            "identifiers": {(DOMAIN, device_identifier)},
             "name": self.device_name,
-            "sw_version": self.coordinator.data[self.did].fw_version,
+            "sw_version": device.fw_version,
             "model": self.model,
+            "model_id": str(self.did),
             "manufacturer": "Rademacher",
+            "serial_number": device.uid.split('_')[0] if device.uid else "unknown",
         }
+        
+        # Only add configuration_url for Rademacher HomePilot (have Web UI)
+        # Newer HomePilot bridges (pure app-based) don't have web UI
+        api_version = self.coordinator.config_entry.data.get('api_version', 1)
+        if api_version == 1:  
+            device_info["configuration_url"] = f"http://{self.coordinator.config_entry.data.get('host', '')}/"
+        
+        return device_info
 
     @property
     def available(self):
