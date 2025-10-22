@@ -7,7 +7,8 @@
         "description": "",
         "data": {
           "exclude": "Ger\u00e4te l\u00f6schen (W\u00e4hle Ger\u00e4te, die du NICHT hinzuf\u00fcgen m\u00f6chtest):",
-          "sensor_type": "Kontaktsensoren mit Schr\u00e4glage ausw\u00e4hlen:"
+          "sensor_type": "Kontaktsensoren mit Schr\u00e4glage ausw\u00e4hlen:",
+          "include_non_executable_scenes": "Nicht ausf\u00fchrbare Szenen einschlie\u00dfen"
         }
       }
     }
@@ -33,7 +34,8 @@
         "description": "",
         "data": {
           "exclude": "Ger\u00e4te l\u00f6schen (W\u00e4hle Ger\u00e4te, die du NICHT hinzuf\u00fcgen m\u00f6chtest):",
-          "sensor_type": "Kontaktsensoren mit Schr\u00e4glage ausw\u00e4hlen:"
+          "sensor_type": "Kontaktsensoren mit Schr\u00e4glage ausw\u00e4hlen:",
+          "include_non_executable_scenes": "Nicht ausf\u00fchrbare Szenen einschlie\u00dfen"
         }
       }
     },

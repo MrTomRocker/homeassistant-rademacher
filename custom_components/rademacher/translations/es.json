@@ -7,7 +7,8 @@
           "description": "",
           "data": {
             "exclude": "EXCLUIR dispositivos (marca los dispositivos que NO quieres agregar):",
-            "sensor_type": "Selecciona los sensores de Contacto con posición inclinada:"
+            "sensor_type": "Selecciona los sensores de Contacto con posición inclinada:",
+            "include_non_executable_scenes": "Incluir escenas no ejecutables"
           }
         }
       }
@@ -33,7 +34,8 @@
           "description": "",
           "data": {
             "exclude": "EXCLUIR dispositivos (marca los dispositivos que NO quieres agregar):",
-            "sensor_type": "Selecciona los sensores de Contacto con posición inclinada:"
+            "sensor_type": "Selecciona los sensores de Contacto con posición inclinada:",
+            "include_non_executable_scenes": "Incluir escenas no ejecutables"
           }
         }
       },

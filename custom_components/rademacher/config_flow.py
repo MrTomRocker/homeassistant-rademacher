@@ -22,7 +22,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_INCLUDE_NON_EXECUTABLE_SCENES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ DATA_SCHEMA_PASSWORD = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
-    VERSION = 2
+    VERSION = 3
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
     host: str = ""
     password: str = ""
@@ -59,6 +59,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 options = {
                     CONF_EXCLUDE: self.exclude_devices,
                     CONF_SENSOR_TYPE: self.ternary_contact_sensors,
+                    CONF_INCLUDE_NON_EXECUTABLE_SCENES: user_input.get(CONF_INCLUDE_NON_EXECUTABLE_SCENES, False),
                 }
                 return self.async_create_entry(
                     title=f"{self.hostname} ({self.mac_address})", data=data, options=options
@@ -78,7 +79,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if not manager.devices:
             return self.async_abort(reason="no_devices_found")
-        data_schema_config = self.build_data_schema(manager.devices)
+        data_schema_config = self.build_data_schema(manager.devices, [], [], False)
         # If there is no user input or there were errors, show the form again, including any errors that were found
         # with the input.
         return self.async_show_form(
@@ -346,6 +347,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             data = {
                 CONF_EXCLUDE: user_input[CONF_EXCLUDE],
                 CONF_SENSOR_TYPE: user_input.get(CONF_SENSOR_TYPE, []),
+                CONF_INCLUDE_NON_EXECUTABLE_SCENES: user_input.get(CONF_INCLUDE_NON_EXECUTABLE_SCENES, False),
             }
             return self.async_create_entry(title=f"{self.hostname} ({self.mac_address})", data=data)
         self.host = self.config_entry.data[CONF_HOST]
@@ -354,7 +356,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         api = HomePilotApi(
             self.host, self.password, self.api_version
         )  # password can be empty if not defined ("")
-        manager = await HomePilotManager.async_build_manager(api)
+        # Check if include non executable scenes is enabled
+        include_non_manual = self.config_entry.options.get(CONF_INCLUDE_NON_EXECUTABLE_SCENES, False)
+        manager = await HomePilotManager.async_build_manager(api, include_non_manual_executable=include_non_manual)
         self.mac_address = format_mac(await manager.get_hub_macaddress())
         self.hostname = await manager.get_nodename()
         if not manager.devices:
@@ -376,15 +380,20 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             ]
         else:
             previous_ternary_contact_sensors = []
+        
+        # Get previous include non executable scenes setting
+        previous_include_non_executable_scenes = self.config_entry.options.get(
+            CONF_INCLUDE_NON_EXECUTABLE_SCENES, False
+        )
 
         data_schema_config = self.build_data_schema(
-            manager.devices, previous_excluded_devices, previous_ternary_contact_sensors
+            manager.devices, previous_excluded_devices, previous_ternary_contact_sensors, previous_include_non_executable_scenes
         )
 
         return self.async_show_form(step_id="init", data_schema=data_schema_config)
 
     def build_data_schema(
-        self, devices, previous_excluded_devices, previous_ternary_contact_sensors
+        self, devices, previous_excluded_devices, previous_ternary_contact_sensors, previous_include_non_executable_scenes
     ):
         devices_to_exclude = {
             did: f"{devices[did].name} (id: {devices[did].did})" for did in devices
@@ -411,6 +420,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     ): cv.multi_select(contact_sensors)
                 }
             )
+        
+        # Add include non executable scenes option
+        schema = schema.extend(
+            {
+                vol.Optional(
+                    CONF_INCLUDE_NON_EXECUTABLE_SCENES, default=previous_include_non_executable_scenes
+                ): bool,
+            }
+        )
         return schema
 
 

@@ -7,7 +7,8 @@
         "description": "",
         "data": {
           "exclude": "VYLÚČIŤ zariadenia (vyberte zariadenia, ktoré NECHCETE pridať):",
-          "sensor_type": "Vyberte kontaktné senzory s naklonenou polohou:"
+          "sensor_type": "Vyberte kontaktné senzory s naklonenou polohou:",
+          "include_non_executable_scenes": "Zahrnúť nevykonateľné scény"
         }
       }
     }
@@ -33,7 +34,8 @@
         "description": "",
         "data": {
           "exclude": "VYLÚČIŤ zariadenia (vyberte zariadenia, ktoré NECHCETE pridať):",
-          "sensor_type": "Vyberte kontaktné senzory s naklonenou polohou:"
+          "sensor_type": "Vyberte kontaktné senzory s naklonenou polohou:",
+          "include_non_executable_scenes": "Zahrnúť nevykonateľné scény"
         }
       }
     },

@@ -27,7 +27,7 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.entity_registry import async_migrate_entries
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_INCLUDE_NON_EXECUTABLE_SCENES
 from .services import async_register_services
 
 # List of platforms to support. There should be a matching .py file for each,
@@ -72,10 +72,21 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
         await async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
         hass.config_entries.async_update_entry(
-            config_entry, title=f"{nodename} ({mac_address})", unique_id=mac_address, data=config_entry.data, options=config_entry.options
+            config_entry, title=f"{nodename} ({mac_address})", unique_id=mac_address, data=config_entry.data, options=config_entry.options, version=2
         )
 
-        config_entry.version = 2
+    if config_entry.version == 2:
+        @callback
+        def update_scene_unique_id(entity_entry):            
+            # Only migrate scene entities with old format
+            if entity_entry.unique_id.startswith("scene_") and not entity_entry.unique_id.startswith(f"{config_entry.unique_id}_scene_"):              
+                new_unique_id = f"{config_entry.unique_id}_{entity_entry.unique_id}"
+                _LOGGER.info("Migrating scene entity unique_id from %s to %s", entity_entry.unique_id, new_unique_id)
+                return {"new_unique_id": new_unique_id}
+            return None
+
+        await async_migrate_entries(hass, config_entry.entry_id, update_scene_unique_id)
+        hass.config_entries.async_update_entry(config_entry, version=3)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 
@@ -104,8 +115,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data.get(CONF_PASSWORD, ""),
         entry.data.get(CONF_API_VERSION, 1),
     )
+    
     try:
-        manager = await HomePilotManager.async_build_manager(api)
+        # Check if include non executable scenes is enabled
+        include_non_manual = entry.options.get(CONF_INCLUDE_NON_EXECUTABLE_SCENES, False)
+        manager = await HomePilotManager.async_build_manager(api, include_non_manual_executable=include_non_manual)
     except AuthError as err:
         # Raising ConfigEntryAuthFailed will cancel future updates
         # and start a config flow with SOURCE_REAUTH (async_step_reauth)
@@ -113,7 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except Exception as err:
         raise ConfigEntryNotReady from err
 
-    _LOGGER.info("Manager instance created, found %s devices", len(manager.devices))
+    _LOGGER.info("%s - Manager instance created, found %s devices for config version: %s", entry.title, len(manager.devices), entry.version)
     _LOGGER.debug("Device IDs: %s", list(manager.devices))
 
     async def async_update_data():
@@ -126,6 +140,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with asyncio.timeout(10):
+                _LOGGER.info("%s - Updating states for %s devices", entry.title, len(manager.devices))
                 return await manager.update_states()
         except AuthError as err:
             # Raising ConfigEntryAuthFailed will cancel future updates
@@ -142,6 +157,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=timedelta(seconds=10),
     )
 
+    async def async_update_scene_data():
+        """Fetch data from API endpoint.
+        This is the place to pre-process the data to lookup tables
+        so entities can quickly look up their data.
+        """
+        try:
+            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
+            # handled by the data update coordinator.
+            async with asyncio.timeout(15):
+                _LOGGER.info("%s - Updating states for %s scenes", entry.title, len(manager.scenes))
+                return await manager.async_update_scenes()
+        except AuthError as err:
+            # Raising ConfigEntryAuthFailed will cancel future updates
+            # and start a config flow with SOURCE_REAUTH (async_step_reauth)
+            raise ConfigEntryAuthFailed from err
+
+    scene_coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        # Name of the data. For logging purposes.
+        name="rademacher_scene",
+        update_method=async_update_scene_data,
+        # Polling interval. Will only be polled if there are subscribers.
+        update_interval=timedelta(seconds=15),
+    )
     # Backward compatibility
     entry_options = {key: entry.options[key] for key in entry.options}
     if CONF_EXCLUDE not in entry.options:
@@ -159,9 +199,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator,
         entry.data,
         entry_options,
+        scene_coordinator,
     )
 
     await coordinator.async_config_entry_first_refresh()
+    await scene_coordinator.async_config_entry_first_refresh()
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
