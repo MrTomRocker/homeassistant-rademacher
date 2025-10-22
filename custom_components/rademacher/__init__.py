@@ -28,7 +28,6 @@ from homeassistant.helpers.entity_registry import async_migrate_entries
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, CONF_INCLUDE_NON_EXECUTABLE_SCENES
-from .services import async_register_services
 
 # List of platforms to support. There should be a matching .py file for each,
 # eg <cover.py> and <sensor.py>
@@ -98,9 +97,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
     # common/preferred as it allows a separate instance of your class for each
     # instance that has been created in the UI.
     hass.data.setdefault(DOMAIN, {})
-
-    # Register all services
-    await async_register_services(hass)
 
     return True
 
