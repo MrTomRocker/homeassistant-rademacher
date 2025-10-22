@@ -8,10 +8,11 @@ from homepilot.device import HomePilotDevice, HomePilotAutoConfigDevice
 from homepilot.hub import HomePilotHub
 from homepilot.manager import HomePilotManager
 from homepilot.switch import HomePilotSwitch
+from homepilot.scenes import HomePilotScene
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.const import CONF_EXCLUDE
 from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, CoordinatorEntity
 
 from .const import DOMAIN
 from .entity import HomePilotEntity
@@ -68,6 +69,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     _LOGGER.info("Found Sun Auto Mode Config Switch for Device ID: %s", device.did)                    
                     new_entities.append(HomePilotSunAutoModeEntity(coordinator, device))                      
     # If we have any new devices, add them
+    for sid in manager.scenes:
+        scene: HomePilotScene = manager.scenes[sid]
+        _LOGGER.info("Found Scene Switch for Scene ID: %s", sid)
+        new_entities.append(HomePilotRademacherSceneEnabledEntity(entry[4], scene))
     if new_entities:
         async_add_entities(new_entities)
 
@@ -569,3 +574,85 @@ class HomePilotSunAutoModeEntity(HomePilotEntity, SwitchEntity):
             await self.async_turn_off()
         else:
             await self.async_turn_on()                        
+
+class HomePilotRademacherSceneEnabledEntity(CoordinatorEntity, SwitchEntity):
+    """This class represents the Switch which controls the enableing of a rademacher scene."""
+    _sid: int
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, scene: HomePilotScene, entity_registry_enabled_default=False
+    ) -> None:
+        super().__init__(coordinator)
+        self._sid = scene.sid
+        hub_mac = coordinator.config_entry.unique_id or "unknown"
+        self._unique_id = f"{hub_mac}_{scene.sid}_scene_enabled" 
+        self._name = f"{scene.name} Enabled"
+        self._device_class = SwitchDeviceClass.SWITCH.value
+        self._entity_category = EntityCategory.CONFIG
+        self._entity_registry_enabled_default = entity_registry_enabled_default
+
+    @property
+    def unique_id(self):
+        return self._unique_id
+    
+    @property
+    def entity_registry_enabled_default(self):
+        return self._entity_registry_enabled_default
+    
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def device_name(self):
+        return self._device_name
+
+    @property
+    def device_class(self):
+        return self._device_class
+
+    @property
+    def entity_category(self):
+        return self._entity_category
+    
+    @property
+    def sid(self):
+        return self._sid
+
+    @property
+    def is_on(self):
+        return self.coordinator.data[self.sid].is_enabled
+
+    @property
+    def device_info(self):
+        """Information about the bridge device that scenes activation belong to."""
+        
+        hub_mac = self.coordinator.config_entry.unique_id or "unknown"
+        bridge_name = self.coordinator.config_entry.title or "Rademacher HomePilot"
+        return {
+            "identifiers": {(DOMAIN, f"{hub_mac}_bridge")},
+            "name": f"{bridge_name} Scenes",
+            "manufacturer": "Rademacher",
+            "model": "HomePilot Bridge",            
+        }
+    
+    async def async_turn_on(self, **kwargs):
+        """Turn the entity on."""
+        scene: HomePilotScene = self.coordinator.data[self.sid]
+        await scene.async_activate_scene()
+        async with asyncio.timeout(5):
+            await self.coordinator.async_request_refresh()
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the entity off."""
+        scene: HomePilotScene = self.coordinator.data[self.sid]
+        await scene.async_deactivate_scene()
+        async with asyncio.timeout(5):
+            await self.coordinator.async_request_refresh()
+
+    async def async_toggle(self, **kwargs):
+        """Toggle the entity."""
+        if self.is_on:
+            await self.async_turn_off()
+        else:
+            await self.async_turn_on()                

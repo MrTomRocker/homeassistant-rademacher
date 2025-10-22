@@ -127,8 +127,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except Exception as err:
         raise ConfigEntryNotReady from err
 
-    _LOGGER.info("%s - Manager instance created, found %s devices for config version: %s", entry.title, len(manager.devices), entry.version)
+    _LOGGER.info("%s - Manager instance created, found %s devices and %s scenes with config version: %s", entry.title, len(manager.devices), len(manager.scenes), entry.version)
     _LOGGER.debug("Device IDs: %s", list(manager.devices))
+    _LOGGER.debug("Scene IDs: %s", list(manager.scenes))
 
     async def async_update_data():
         """Fetch data from API endpoint.
