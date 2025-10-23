@@ -27,7 +27,11 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.entity_registry import async_migrate_entries
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, CONF_INCLUDE_NON_EXECUTABLE_SCENES
+from .const import (
+    DOMAIN, 
+    CONF_ENABLE_CYCLIC_SCENE_POLLING,
+    CONF_INCLUDE_NON_EXECUTABLE_SCENES,
+)
 
 # List of platforms to support. There should be a matching .py file for each,
 # eg <cover.py> and <sensor.py>
@@ -169,16 +173,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Raising ConfigEntryAuthFailed will cancel future updates
             # and start a config flow with SOURCE_REAUTH (async_step_reauth)
             raise ConfigEntryAuthFailed from err
-
+        
+    enable_cyclic_scene_polling = entry.options.get(CONF_ENABLE_CYCLIC_SCENE_POLLING, False)    
     scene_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         # Name of the data. For logging purposes.
         name="rademacher_scene",
-        update_method=async_update_scene_data,
-        # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=15),
+        update_method=async_update_scene_data,       
+        update_interval=timedelta(seconds=15) if enable_cyclic_scene_polling else None,
     )
+    
+    if enable_cyclic_scene_polling:
+        _LOGGER.info("%s - Cyclic scene polling enabled with 15-second interval", entry.title)
+    else:
+        _LOGGER.info("%s - Cyclic scene polling disabled, scenes will be static", entry.title)
+        
     # Backward compatibility
     entry_options = {key: entry.options[key] for key in entry.options}
     if CONF_EXCLUDE not in entry.options:

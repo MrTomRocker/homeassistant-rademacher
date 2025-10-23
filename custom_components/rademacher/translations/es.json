@@ -8,6 +8,8 @@
           "data": {
             "exclude": "EXCLUIR dispositivos (marca los dispositivos que NO quieres agregar):",
             "sensor_type": "Selecciona los sensores de Contacto con posición inclinada:",
+            "enable_cyclic_scene_polling": "Habilitar sondeo cíclico de escenas",
+            "create_scene_activation_entities": "Crear entidades de activación de escenas",
             "include_non_executable_scenes": "Incluir escenas no ejecutables"
           }
         }

@@ -14,7 +14,7 @@ from homeassistant.const import CONF_EXCLUDE
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, CoordinatorEntity
 
-from .const import DOMAIN
+from .const import CONF_CREATE_SCENE_ACTIVATION_ENTITIES, DOMAIN
 from .entity import HomePilotEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,11 +68,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 if auto_device.has_sun_auto_mode:
                     _LOGGER.info("Found Sun Auto Mode Config Switch for Device ID: %s", device.did)                    
                     new_entities.append(HomePilotSunAutoModeEntity(coordinator, device))                      
-    # If we have any new devices, add them
-    for sid in manager.scenes:
-        scene: HomePilotScene = manager.scenes[sid]
-        _LOGGER.info("Found Scene Switch for Scene ID: %s", sid)
-        new_entities.append(HomePilotRademacherSceneEnabledEntity(entry[4], scene))
+    create_scene_activation_entities = entry[3].get(CONF_CREATE_SCENE_ACTIVATION_ENTITIES, False)
+    if create_scene_activation_entities:
+        for sid in manager.scenes:
+            scene: HomePilotScene = manager.scenes[sid]
+            _LOGGER.info("Found Scene Switch for Scene ID: %s", sid)
+            new_entities.append(HomePilotRademacherSceneEnabledEntity(entry[4], scene))
     if new_entities:
         async_add_entities(new_entities)
 

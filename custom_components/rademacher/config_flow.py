@@ -22,7 +22,12 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import DOMAIN, CONF_INCLUDE_NON_EXECUTABLE_SCENES
+from .const import (
+    DOMAIN,
+    CONF_ENABLE_CYCLIC_SCENE_POLLING,
+    CONF_CREATE_SCENE_ACTIVATION_ENTITIES,
+    CONF_INCLUDE_NON_EXECUTABLE_SCENES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +84,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if not manager.devices:
             return self.async_abort(reason="no_devices_found")
-        data_schema_config = self.build_data_schema(manager.devices, [], [], False)
+        data_schema_config = self.build_data_schema(manager.devices)
         # If there is no user input or there were errors, show the form again, including any errors that were found
         # with the input.
         return self.async_show_form(
@@ -304,7 +309,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry):
         return OptionsFlowHandler(config_entry)
 
-    def build_data_schema(self, devices):
+    def build_data_schema(self, devices, user_input=None):
         devices_to_exclude = {
             did: f"{devices[did].name} (id: {devices[did].did})" for did in devices
         }
@@ -330,6 +335,30 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                 }
             )
+        # Add scene configuration options
+        schema = schema.extend(
+            {
+                vol.Optional(CONF_ENABLE_CYCLIC_SCENE_POLLING, default=False): bool,
+            }
+        )
+        
+        # Only show scene activation entities if cyclic polling is enabled
+        enable_polling = False
+        if user_input:
+            enable_polling = user_input.get(CONF_ENABLE_CYCLIC_SCENE_POLLING, False)
+        
+        if enable_polling:
+            schema = schema.extend(
+                {
+                    vol.Optional(CONF_CREATE_SCENE_ACTIVATION_ENTITIES, default=False): bool,
+                }
+            )
+        
+        schema = schema.extend(
+            {
+                vol.Optional(CONF_INCLUDE_NON_EXECUTABLE_SCENES, default=False): bool,
+            }
+        )
         return schema
 
 
@@ -344,12 +373,25 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         if user_input is not None:
-            data = {
-                CONF_EXCLUDE: user_input[CONF_EXCLUDE],
-                CONF_SENSOR_TYPE: user_input.get(CONF_SENSOR_TYPE, []),
-                CONF_INCLUDE_NON_EXECUTABLE_SCENES: user_input.get(CONF_INCLUDE_NON_EXECUTABLE_SCENES, False),
-            }
-            return self.async_create_entry(title=f"{self.hostname} ({self.mac_address})", data=data)
+            # Check if we need to redisplay the form due to conditional checkbox logic
+            enable_polling = user_input.get(CONF_ENABLE_CYCLIC_SCENE_POLLING, False)
+            scene_entities = user_input.get(CONF_CREATE_SCENE_ACTIVATION_ENTITIES, False)
+            
+            # If scene entities is checked but polling is not enabled, we need to redisplay
+            if scene_entities and not enable_polling:
+                # Reset scene entities checkbox and redisplay form
+                user_input[CONF_CREATE_SCENE_ACTIVATION_ENTITIES] = False
+            
+            # If all validation passes, save the configuration
+            if user_input.get('_validate_only', False) is False:
+                data = {
+                    CONF_EXCLUDE: user_input[CONF_EXCLUDE],
+                    CONF_SENSOR_TYPE: user_input.get(CONF_SENSOR_TYPE, []),
+                    CONF_ENABLE_CYCLIC_SCENE_POLLING: user_input.get(CONF_ENABLE_CYCLIC_SCENE_POLLING, False),
+                    CONF_CREATE_SCENE_ACTIVATION_ENTITIES: user_input.get(CONF_CREATE_SCENE_ACTIVATION_ENTITIES, False),
+                    CONF_INCLUDE_NON_EXECUTABLE_SCENES: user_input.get(CONF_INCLUDE_NON_EXECUTABLE_SCENES, False),
+                }
+                return self.async_create_entry(title=f"{self.hostname} ({self.mac_address})", data=data)
         self.host = self.config_entry.data[CONF_HOST]
         self.password = self.config_entry.data.get(CONF_PASSWORD, "")
         self.api_version = self.config_entry.data.get(CONF_API_VERSION, 1)
@@ -381,19 +423,28 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         else:
             previous_ternary_contact_sensors = []
         
-        # Get previous include non executable scenes setting
         previous_include_non_executable_scenes = self.config_entry.options.get(
             CONF_INCLUDE_NON_EXECUTABLE_SCENES, False
         )
+        previous_enable_scene_polling = self.config_entry.options.get(
+            CONF_ENABLE_CYCLIC_SCENE_POLLING, False
+        )
+        previous_create_scene_activation_entities = self.config_entry.options.get(
+            CONF_CREATE_SCENE_ACTIVATION_ENTITIES, False
+        )
 
         data_schema_config = self.build_data_schema(
-            manager.devices, previous_excluded_devices, previous_ternary_contact_sensors, previous_include_non_executable_scenes
+            manager.devices, previous_excluded_devices, previous_ternary_contact_sensors, 
+            previous_enable_scene_polling, previous_create_scene_activation_entities, previous_include_non_executable_scenes,
+            user_input
         )
 
         return self.async_show_form(step_id="init", data_schema=data_schema_config)
 
     def build_data_schema(
-        self, devices, previous_excluded_devices, previous_ternary_contact_sensors, previous_include_non_executable_scenes
+        self, devices, previous_excluded_devices, previous_ternary_contact_sensors, 
+        previous_enable_scene_polling, previous_create_scene_activation_entities, previous_include_non_executable_scenes,
+        user_input=None
     ):
         devices_to_exclude = {
             did: f"{devices[did].name} (id: {devices[did].did})" for did in devices
@@ -420,8 +471,28 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     ): cv.multi_select(contact_sensors)
                 }
             )
+        schema = schema.extend(
+            {
+                vol.Optional(
+                    CONF_ENABLE_CYCLIC_SCENE_POLLING, default=previous_enable_scene_polling
+                ): bool,
+            }
+        )
         
-        # Add include non executable scenes option
+        # Only show scene activation entities if cyclic polling is enabled
+        enable_polling = previous_enable_scene_polling
+        if user_input:
+            enable_polling = user_input.get(CONF_ENABLE_CYCLIC_SCENE_POLLING, previous_enable_scene_polling)
+        
+        if enable_polling:
+            schema = schema.extend(
+                {
+                    vol.Optional(
+                        CONF_CREATE_SCENE_ACTIVATION_ENTITIES, default=previous_create_scene_activation_entities
+                    ): bool,
+                }
+            )
+        
         schema = schema.extend(
             {
                 vol.Optional(
