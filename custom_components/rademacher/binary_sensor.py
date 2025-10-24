@@ -7,6 +7,7 @@ from homepilot.device import HomePilotDevice
 from homepilot.manager import HomePilotManager
 from homepilot.sensor import HomePilotSensor
 from homepilot.wallcontroller import HomePilotWallController
+from homepilot.thermostat import HomePilotThermostat
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -152,6 +153,43 @@ async def async_setup_entry(hass, config_entry: ConfigEntry, async_add_entities)
                             entity_category=EntityCategory.DIAGNOSTIC,
                         )
                     )
+            if isinstance(device, HomePilotThermostat):
+                if device.has_ext_open_window_detect:
+                    _LOGGER.info(
+                        "Found External Open Window Detection Sensor for Device ID: %s", device.did
+                    )
+                    new_entities.append(
+                        HomePilotBinarySensorEntity(
+                            coordinator=coordinator,
+                            device=device,
+                            id_suffix="open_window_detect_external",
+                            name_suffix="Open Window Detection (external)",
+                            value_attr="ext_open_window_detect_value",
+                            device_class=BinarySensorDeviceClass.WINDOW,
+                            icon_off="mdi:window-closed",
+                            icon_on="mdi:window-open",
+                            entity_category=EntityCategory.DIAGNOSTIC,
+                            entity_registry_enabled_default=False
+                        )
+                    )  
+                if device.has_int_open_window_detect:
+                    _LOGGER.info(
+                        "Found Internal Open Window Detection Sensor for Device ID: %s", device.did
+                    )
+                    new_entities.append(
+                        HomePilotBinarySensorEntity(
+                            coordinator=coordinator,
+                            device=device,
+                            id_suffix="open_window_detect_internal",
+                            name_suffix="Open Window Detection (internal)",
+                            value_attr="int_open_window_detect_value",
+                            device_class=BinarySensorDeviceClass.WINDOW,
+                            icon_off="mdi:window-closed",
+                            icon_on="mdi:window-open",
+                            entity_category=EntityCategory.DIAGNOSTIC,   
+                            entity_registry_enabled_default=False
+                        )
+                    )
             if isinstance(device, HomePilotWallController):
                 channels = device.channels
                 if channels is not None:
@@ -208,6 +246,7 @@ class HomePilotBinarySensorEntity(HomePilotEntity, BinarySensorEntity):
         icon_off=None,
         has_channels=False,
         should_poll=True,
+        entity_registry_enabled_default=True,
     ):
         super().__init__(
             coordinator,
@@ -216,6 +255,7 @@ class HomePilotBinarySensorEntity(HomePilotEntity, BinarySensorEntity):
             name=f"{device.name} {name_suffix}",
             device_class=device_class,
             entity_category=entity_category,
+            entity_registry_enabled_default=entity_registry_enabled_default,
         )
         self._value_attr = value_attr
         self._icon_on = icon_on

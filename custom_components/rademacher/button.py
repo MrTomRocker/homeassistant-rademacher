@@ -3,6 +3,7 @@ import asyncio
 import logging
 
 from homepilot.device import HomePilotDevice
+from homepilot.thermostat import HomePilotThermostat
 from homepilot.manager import HomePilotManager
 
 from homeassistant.components.button import ButtonEntity
@@ -29,6 +30,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if device.has_ping_cmd:
                 _LOGGER.info("Found Ping Command Button for Device ID: %s", device.did)
                 new_entities.append(HomePilotPingButtonEntity(coordinator, device))
+            if isinstance(device, HomePilotThermostat) and device.has_contact_open_cmd:
+                _LOGGER.info("Found Contact Open Command Button for Device ID: %s", device.did)
+                new_entities.append(HomePilotContactOpenCommandButtonEntity(coordinator, device))
+            if isinstance(device, HomePilotThermostat) and device.has_contact_close_cmd:
+                _LOGGER.info("Found Contact Close Command Button for Device ID: %s", device.did)
+                new_entities.append(HomePilotContactCloseCommandButtonEntity(coordinator, device))
     # If we have any new devices, add them
     if new_entities:
         async_add_entities(new_entities)
@@ -59,5 +66,53 @@ class HomePilotPingButtonEntity(HomePilotEntity, ButtonEntity):
     async def async_press(self) -> None:
         device: HomePilotDevice = self.coordinator.data[self.did]
         await device.async_ping()
+        async with asyncio.timeout(5):
+            await self.coordinator.async_request_refresh()
+
+class HomePilotContactOpenCommandButtonEntity(HomePilotEntity, ButtonEntity):
+    """This class represents a button which sends a Contact Open command to a device."""
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, device: HomePilotDevice
+    ) -> None:
+        super().__init__(
+            coordinator,
+            device,
+            unique_id=f"{device.uid}_contact_open",
+            name=f"{device.name} Contact Open",
+            entity_registry_enabled_default=False,
+        )
+
+    @property
+    def available(self):
+        return True
+
+    async def async_press(self) -> None:
+        device: HomePilotDevice = self.coordinator.data[self.did]
+        await device.async_contact_open_cmd()
+        async with asyncio.timeout(5):
+            await self.coordinator.async_request_refresh()
+
+class HomePilotContactCloseCommandButtonEntity(HomePilotEntity, ButtonEntity):
+    """This class represents a button which sends a Contact Close command to a device."""
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, device: HomePilotDevice
+    ) -> None:
+        super().__init__(
+            coordinator,
+            device,
+            unique_id=f"{device.uid}_contact_close",
+            name=f"{device.name} Contact Close",
+            entity_registry_enabled_default=False,
+        )
+
+    @property
+    def available(self):
+        return True
+
+    async def async_press(self) -> None:
+        device: HomePilotDevice = self.coordinator.data[self.did]
+        await device.async_contact_close_cmd()
         async with asyncio.timeout(5):
             await self.coordinator.async_request_refresh()
