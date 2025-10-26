@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EXCLUDE, CONF_SENSOR_TYPE, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_EXCLUDE, CONF_SENSOR_TYPE
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator

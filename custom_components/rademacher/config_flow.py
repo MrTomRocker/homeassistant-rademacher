@@ -64,6 +64,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 options = {
                     CONF_EXCLUDE: self.exclude_devices,
                     CONF_SENSOR_TYPE: self.ternary_contact_sensors,
+                    CONF_ENABLE_CYCLIC_SCENE_POLLING: user_input.get(CONF_ENABLE_CYCLIC_SCENE_POLLING, False),
+                    CONF_CREATE_SCENE_ACTIVATION_ENTITIES: user_input.get(CONF_CREATE_SCENE_ACTIVATION_ENTITIES, False),
                     CONF_INCLUDE_NON_EXECUTABLE_SCENES: user_input.get(CONF_INCLUDE_NON_EXECUTABLE_SCENES, False),
                 }
                 return self.async_create_entry(
