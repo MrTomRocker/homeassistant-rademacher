@@ -203,7 +203,7 @@ async def async_setup_entry(hass, config_entry: ConfigEntry, async_add_entities)
                             icon_off="mdi:weather-sunny-off",
                             entity_category=EntityCategory.DIAGNOSTIC,
                         )
-                    )                                              
+                    )
             if isinstance(device, HomePilotThermostat):
                 if device.has_ext_open_window_detect or device.has_int_open_window_detect:
                     _LOGGER.info(
@@ -222,7 +222,7 @@ async def async_setup_entry(hass, config_entry: ConfigEntry, async_add_entities)
                             entity_category=EntityCategory.DIAGNOSTIC,
                             entity_registry_enabled_default=False
                         )
-                    )  
+                    )
 
             if isinstance(device, HomePilotWallController):
                 channels = device.channels
@@ -370,7 +370,7 @@ class HomePilotBinaryInternalExternalSensorEntity(HomePilotEntity, BinarySensorE
         self._icon_off = icon_off
 
     @property
-    def value_attr_int(self):        
+    def value_attr_int(self):
         return self._value_attr_int
 
     @property

@@ -7,7 +7,7 @@ from homepilot.manager import HomePilotManager
 from homepilot.thermostat import HomePilotThermostat
 
 from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode, HVACAction, PRESET_NONE, PRESET_BOOST 
+from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode, HVACAction, PRESET_NONE, PRESET_BOOST
 from homeassistant.const import CONF_EXCLUDE, UnitOfTemperature
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -64,7 +64,7 @@ class HomePilotClimateEntity(HomePilotEntity, ClimateEntity):
         self._attr_hvac_modes = (
             [HVACMode.AUTO, HVACMode.HEAT_COOL]
             if device.has_auto_mode
-            else [HVACMode.HEAT_COOL]        
+            else [HVACMode.HEAT_COOL]
         )
         self._attr_hvac_action = HVACAction.IDLE if device.has_relais_status else None
         self._attr_preset_modes = [PRESET_NONE, PRESET_BOOST] if device.has_boost_active else None
@@ -114,16 +114,16 @@ class HomePilotClimateEntity(HomePilotEntity, ClimateEntity):
                 return HVACAction.HEATING
             else:
                 return HVACAction.COOLING
-        else:   
+        else:
             return HVACAction.IDLE
-    
+
     @property
     def preset_mode(self) -> str | None:
         device: HomePilotThermostat = self.coordinator.data[self.did]
         if not device.has_boost_active:
             return None
         return PRESET_BOOST if device.boost_active_value else PRESET_NONE
-    
+
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         device: HomePilotThermostat = self.coordinator.data[self.did]
         if not device.has_boost_active:

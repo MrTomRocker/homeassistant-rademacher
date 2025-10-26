@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_registry import async_migrate_entries
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
-    DOMAIN, 
+    DOMAIN,
     CONF_ENABLE_CYCLIC_SCENE_POLLING,
     CONF_INCLUDE_NON_EXECUTABLE_SCENES,
 )
@@ -80,9 +80,9 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
 
     if config_entry.version == 2:
         @callback
-        def update_scene_unique_id(entity_entry):            
+        def update_scene_unique_id(entity_entry):
             # Only migrate scene entities with old format
-            if entity_entry.unique_id.startswith("scene_") and not entity_entry.unique_id.startswith(f"{config_entry.unique_id}_scene_"):              
+            if entity_entry.unique_id.startswith("scene_") and not entity_entry.unique_id.startswith(f"{config_entry.unique_id}_scene_"):
                 new_unique_id = f"{config_entry.unique_id}_{entity_entry.unique_id}"
                 _LOGGER.info("Migrating scene entity unique_id from %s to %s", entity_entry.unique_id, new_unique_id)
                 return {"new_unique_id": new_unique_id}
@@ -115,7 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data.get(CONF_PASSWORD, ""),
         entry.data.get(CONF_API_VERSION, 1),
     )
-    
+
     try:
         # Check if include non executable scenes is enabled
         include_non_manual = entry.options.get(CONF_INCLUDE_NON_EXECUTABLE_SCENES, False)
@@ -173,22 +173,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Raising ConfigEntryAuthFailed will cancel future updates
             # and start a config flow with SOURCE_REAUTH (async_step_reauth)
             raise ConfigEntryAuthFailed from err
-        
-    enable_cyclic_scene_polling = entry.options.get(CONF_ENABLE_CYCLIC_SCENE_POLLING, False)    
+
+    enable_cyclic_scene_polling = entry.options.get(CONF_ENABLE_CYCLIC_SCENE_POLLING, False)
     scene_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         # Name of the data. For logging purposes.
         name="rademacher_scene",
-        update_method=async_update_scene_data,       
+        update_method=async_update_scene_data,
         update_interval=timedelta(seconds=15) if enable_cyclic_scene_polling else None,
     )
-    
+
     if enable_cyclic_scene_polling:
         _LOGGER.info("%s - Cyclic scene polling enabled with 15-second interval", entry.title)
     else:
         _LOGGER.info("%s - Cyclic scene polling disabled, scenes will be static", entry.title)
-        
+
     # Backward compatibility
     entry_options = {key: entry.options[key] for key in entry.options}
     if CONF_EXCLUDE not in entry.options:

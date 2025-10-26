@@ -342,7 +342,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_CREATE_SCENE_ACTIVATION_ENTITIES, default=False): bool,
             }
         )
-        
+
         schema = schema.extend(
             {
                 vol.Optional(CONF_INCLUDE_NON_EXECUTABLE_SCENES, default=False): bool,
@@ -400,7 +400,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             ]
         else:
             previous_ternary_contact_sensors = []
-        
+
         previous_include_non_executable_scenes = self.config_entry.options.get(
             CONF_INCLUDE_NON_EXECUTABLE_SCENES, False
         )
@@ -412,14 +412,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
         data_schema_config = self.build_data_schema(
-            manager.devices, previous_excluded_devices, previous_ternary_contact_sensors, 
+            manager.devices, previous_excluded_devices, previous_ternary_contact_sensors,
             previous_enable_scene_polling, previous_create_scene_activation_entities, previous_include_non_executable_scenes
         )
 
         return self.async_show_form(step_id="init", data_schema=data_schema_config)
 
     def build_data_schema(
-        self, devices, previous_excluded_devices, previous_ternary_contact_sensors, 
+        self, devices, previous_excluded_devices, previous_ternary_contact_sensors,
         previous_enable_scene_polling, previous_create_scene_activation_entities, previous_include_non_executable_scenes
     ):
         devices_to_exclude = {
@@ -457,7 +457,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 ): bool,
             }
         )
-        
+
         schema = schema.extend(
             {
                 vol.Optional(

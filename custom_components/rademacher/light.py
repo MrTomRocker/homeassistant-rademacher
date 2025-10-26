@@ -72,7 +72,7 @@ class HomePilotActuatorLightEntity(HomePilotEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         device: HomePilotActuator = self.coordinator.data[self.did]
-        if ATTR_BRIGHTNESS in kwargs: 
+        if ATTR_BRIGHTNESS in kwargs:
             await device.async_set_brightness(round(kwargs[ATTR_BRIGHTNESS]*100/255))
         else:
             await device.async_turn_on()

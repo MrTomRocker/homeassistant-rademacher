@@ -19,12 +19,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entry = hass.data[DOMAIN][config_entry.entry_id]
     manager: HomePilotManager = entry[0]
     scene_coordinator: DataUpdateCoordinator = entry[4]  # Scene coordinator is at index 4
-    
+
     new_entities = []
     for sid in manager.scenes:
         scene: HomePilotScene = manager.scenes[sid]
         _LOGGER.info("Found Scene for ID: %s", sid)
-        new_entities.append(HomePilotSceneEntity(scene_coordinator, scene))    
+        new_entities.append(HomePilotSceneEntity(scene_coordinator, scene))
     # If we have any new devices, add them
     if new_entities:
         async_add_entities(new_entities)
@@ -40,7 +40,7 @@ class HomePilotSceneEntity(CoordinatorEntity, Scene):
         # Initialize both parent classes
         CoordinatorEntity.__init__(self, coordinator)
         Scene.__init__(self)
-        
+
         self._sid = scene.sid
         # Use hub MAC + scene sid for globally unique ID, similar to device entities
         hub_mac = coordinator.config_entry.unique_id or "unknown"
@@ -53,21 +53,21 @@ class HomePilotSceneEntity(CoordinatorEntity, Scene):
         # Get the bridge/hub identifier from config entry
         hub_mac = self.coordinator.config_entry.unique_id or "unknown"
         bridge_name = self.coordinator.config_entry.title or "Rademacher HomePilot"
-        
+
         # Group scenes under the HomePilot bridge device
         return {
             "identifiers": {(DOMAIN, f"{hub_mac}_bridge")},
             "name": f"{bridge_name} Scenes",
             "manufacturer": "Rademacher",
-            "model": "HomePilot Bridge",            
+            "model": "HomePilot Bridge",
         }
 
     @property
-    def sid(self):        
+    def sid(self):
         return self._sid
 
     @property
-    def available(self):        
+    def available(self):
         try:
             scene: HomePilotScene = self.coordinator.data[self._sid]
             return scene.available
@@ -75,12 +75,12 @@ class HomePilotSceneEntity(CoordinatorEntity, Scene):
             return False
 
     @property
-    def is_enabled(self):        
+    def is_enabled(self):
         scene: HomePilotScene = self.coordinator.data[self._sid]
         return scene.is_enabled
 
     @property
-    def is_manual_executable(self):        
+    def is_manual_executable(self):
         scene: HomePilotScene = self.coordinator.data[self._sid]
         return scene.is_manual_executable
 
@@ -94,7 +94,7 @@ class HomePilotSceneEntity(CoordinatorEntity, Scene):
             return "mdi:palette-outline"  # Non-executable scene - outlined palette icon
 
     @property
-    def extra_state_attributes(self):        
+    def extra_state_attributes(self):
         scene: HomePilotScene = self.coordinator.data[self._sid]
         return {
             "scene_id": self._sid,
@@ -107,12 +107,12 @@ class HomePilotSceneEntity(CoordinatorEntity, Scene):
         """Activate scene. Try to get entities into requested state."""
         # Follow same pattern as other entities: get current data and execute action
         scene: HomePilotScene = self.coordinator.data[self._sid]
-        
+
         # Check if scene is manually executable
         if not scene.is_manual_executable:
             _LOGGER.warning("Scene %s (%s) is not manually executable", scene.name, self._sid)
             return
-            
+
         await scene.async_execute_scene()
         # Request coordinator refresh after scene execution (like other entities)
         async with asyncio.timeout(5):

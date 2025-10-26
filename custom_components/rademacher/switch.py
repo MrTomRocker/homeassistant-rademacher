@@ -46,28 +46,28 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 auto_device: HomePilotAutoConfigDevice = device
                 if auto_device.has_auto_mode and not isinstance(auto_device, HomePilotThermostat):
                     _LOGGER.info("Found Auto Mode Config Switch for Device ID: %s", device.did)
-                    new_entities.append(HomePilotAutoModeEntity(coordinator, device))                    
+                    new_entities.append(HomePilotAutoModeEntity(coordinator, device))
                 if auto_device.has_time_auto_mode:
                     _LOGGER.info("Found Time Auto Mode Config Switch for Device ID: %s", device.did)
                     new_entities.append(HomePilotTimeAutoModeEntity(coordinator, device))
                 if auto_device.has_contact_auto_mode:
                     _LOGGER.info("Found Contact Auto Mode Config Switch for Device ID: %s", device.did)
-                    new_entities.append(HomePilotContactAutoModeEntity(coordinator, device))                                         
+                    new_entities.append(HomePilotContactAutoModeEntity(coordinator, device))
                 if auto_device.has_wind_auto_mode:
                     _LOGGER.info("Found Wind Auto Mode Config Switch for Device ID: %s", device.did)
-                    new_entities.append(HomePilotWindAutoModeEntity(coordinator, device))                           
+                    new_entities.append(HomePilotWindAutoModeEntity(coordinator, device))
                 if auto_device.has_dusk_auto_mode:
-                    _LOGGER.info("Found Dusk Auto Mode Config Switch for Device ID: %s", device.did)                    
+                    _LOGGER.info("Found Dusk Auto Mode Config Switch for Device ID: %s", device.did)
                     new_entities.append(HomePilotDuskAutoModeEntity(coordinator, device))
                 if auto_device.has_dawn_auto_mode:
-                    _LOGGER.info("Found Dawn Auto Mode Config Switch for Device ID: %s", device.did)                    
-                    new_entities.append(HomePilotDawnAutoModeEntity(coordinator, device))                                                 
+                    _LOGGER.info("Found Dawn Auto Mode Config Switch for Device ID: %s", device.did)
+                    new_entities.append(HomePilotDawnAutoModeEntity(coordinator, device))
                 if auto_device.has_rain_auto_mode:
-                    _LOGGER.info("Found Rain Auto Mode Config Switch for Device ID: %s", device.did)                    
-                    new_entities.append(HomePilotRainAutoModeEntity(coordinator, device))                      
+                    _LOGGER.info("Found Rain Auto Mode Config Switch for Device ID: %s", device.did)
+                    new_entities.append(HomePilotRainAutoModeEntity(coordinator, device))
                 if auto_device.has_sun_auto_mode:
-                    _LOGGER.info("Found Sun Auto Mode Config Switch for Device ID: %s", device.did)                    
-                    new_entities.append(HomePilotSunAutoModeEntity(coordinator, device))                      
+                    _LOGGER.info("Found Sun Auto Mode Config Switch for Device ID: %s", device.did)
+                    new_entities.append(HomePilotSunAutoModeEntity(coordinator, device))
     create_scene_activation_entities = entry[3].get(CONF_CREATE_SCENE_ACTIVATION_ENTITIES, False)
     if create_scene_activation_entities:
         for sid in manager.scenes:
@@ -322,7 +322,7 @@ class HomePilotTimeAutoModeEntity(HomePilotEntity, SwitchEntity):
         if self.is_on:
             await self.async_turn_off()
         else:
-            await self.async_turn_on()            
+            await self.async_turn_on()
 
 class HomePilotContactAutoModeEntity(HomePilotEntity, SwitchEntity):
     """This class represents the Switch which controls Contact Auto Mode."""
@@ -364,7 +364,7 @@ class HomePilotContactAutoModeEntity(HomePilotEntity, SwitchEntity):
         if self.is_on:
             await self.async_turn_off()
         else:
-            await self.async_turn_on()                      
+            await self.async_turn_on()
 
 class HomePilotWindAutoModeEntity(HomePilotEntity, SwitchEntity):
     """This class represents the Switch which controls Wind Auto Mode."""
@@ -406,7 +406,7 @@ class HomePilotWindAutoModeEntity(HomePilotEntity, SwitchEntity):
         if self.is_on:
             await self.async_turn_off()
         else:
-            await self.async_turn_on()                
+            await self.async_turn_on()
 
 class HomePilotDawnAutoModeEntity(HomePilotEntity, SwitchEntity):
     """This class represents the Switch which controls Dawn Auto Mode."""
@@ -448,7 +448,7 @@ class HomePilotDawnAutoModeEntity(HomePilotEntity, SwitchEntity):
         if self.is_on:
             await self.async_turn_off()
         else:
-            await self.async_turn_on()            
+            await self.async_turn_on()
 
 class HomePilotDuskAutoModeEntity(HomePilotEntity, SwitchEntity):
     """This class represents the Switch which controls Dusk Auto Mode."""
@@ -490,7 +490,7 @@ class HomePilotDuskAutoModeEntity(HomePilotEntity, SwitchEntity):
         if self.is_on:
             await self.async_turn_off()
         else:
-            await self.async_turn_on()                    
+            await self.async_turn_on()
 
 class HomePilotRainAutoModeEntity(HomePilotEntity, SwitchEntity):
     """This class represents the Switch which controls Rain Auto Mode."""
@@ -532,7 +532,7 @@ class HomePilotRainAutoModeEntity(HomePilotEntity, SwitchEntity):
         if self.is_on:
             await self.async_turn_off()
         else:
-            await self.async_turn_on()        
+            await self.async_turn_on()
 
 class HomePilotSunAutoModeEntity(HomePilotEntity, SwitchEntity):
     """This class represents the Switch which controls Sun Auto Mode."""
@@ -574,7 +574,7 @@ class HomePilotSunAutoModeEntity(HomePilotEntity, SwitchEntity):
         if self.is_on:
             await self.async_turn_off()
         else:
-            await self.async_turn_on()                        
+            await self.async_turn_on()
 
 class HomePilotRademacherSceneEnabledEntity(CoordinatorEntity, SwitchEntity):
     """This class represents the Switch which controls the enableing of a rademacher scene."""
@@ -586,7 +586,7 @@ class HomePilotRademacherSceneEnabledEntity(CoordinatorEntity, SwitchEntity):
         super().__init__(coordinator)
         self._sid = scene.sid
         hub_mac = coordinator.config_entry.unique_id or "unknown"
-        self._unique_id = f"{hub_mac}_{scene.sid}_scene_enabled" 
+        self._unique_id = f"{hub_mac}_{scene.sid}_scene_enabled"
         self._name = f"{scene.name} Enabled"
         self._device_class = SwitchDeviceClass.SWITCH.value
         self._entity_category = EntityCategory.CONFIG
@@ -595,11 +595,11 @@ class HomePilotRademacherSceneEnabledEntity(CoordinatorEntity, SwitchEntity):
     @property
     def unique_id(self):
         return self._unique_id
-    
+
     @property
     def entity_registry_enabled_default(self):
         return self._entity_registry_enabled_default
-    
+
     @property
     def name(self):
         return self._name
@@ -615,7 +615,7 @@ class HomePilotRademacherSceneEnabledEntity(CoordinatorEntity, SwitchEntity):
     @property
     def entity_category(self):
         return self._entity_category
-    
+
     @property
     def sid(self):
         return self._sid
@@ -627,16 +627,16 @@ class HomePilotRademacherSceneEnabledEntity(CoordinatorEntity, SwitchEntity):
     @property
     def device_info(self):
         """Information about the bridge device that scenes activation belong to."""
-        
+
         hub_mac = self.coordinator.config_entry.unique_id or "unknown"
         bridge_name = self.coordinator.config_entry.title or "Rademacher HomePilot"
         return {
             "identifiers": {(DOMAIN, f"{hub_mac}_bridge")},
             "name": f"{bridge_name} Scenes",
             "manufacturer": "Rademacher",
-            "model": "HomePilot Bridge",            
+            "model": "HomePilot Bridge",
         }
-    
+
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
         scene: HomePilotScene = self.coordinator.data[self.sid]
@@ -656,4 +656,4 @@ class HomePilotRademacherSceneEnabledEntity(CoordinatorEntity, SwitchEntity):
         if self.is_on:
             await self.async_turn_off()
         else:
-            await self.async_turn_on()                
+            await self.async_turn_on()
