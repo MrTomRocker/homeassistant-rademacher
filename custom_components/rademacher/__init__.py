@@ -123,8 +123,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except AuthError as err:
         # Raising ConfigEntryAuthFailed will cancel future updates
         # and start a config flow with SOURCE_REAUTH (async_step_reauth)
+        await api.async_close()
         raise ConfigEntryAuthFailed from err
     except Exception as err:
+        await api.async_close()
         raise ConfigEntryNotReady from err
 
     _LOGGER.info("%s - Manager instance created, found %s devices and %s scenes with config version: %s", entry.title, len(manager.devices), len(manager.scenes), entry.version)
@@ -241,6 +243,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     # details
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unloaded:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        manager, _, _, _, _ = hass.data[DOMAIN].pop(entry.entry_id)
+        # Close the API session
+        await manager.api.async_close()
 
     return unloaded

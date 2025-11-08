@@ -77,23 +77,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         api = HomePilotApi(
             self.host, self.password, self.api_version
         )  # password can be empty if not defined ("")
-        manager = await HomePilotManager.async_build_manager(api)
-        self.hostname = await manager.get_nodename()
-        if not self.mac_address:
-            self.mac_address = format_mac(await manager.get_hub_macaddress())
-            await self.async_set_unique_id(self.mac_address)
-            self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
+        try:
+            manager = await HomePilotManager.async_build_manager(api)
+            self.hostname = await manager.get_nodename()
+            if not self.mac_address:
+                self.mac_address = format_mac(await manager.get_hub_macaddress())
+                await self.async_set_unique_id(self.mac_address)
+                self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
 
-        if not manager.devices:
-            return self.async_abort(reason="no_devices_found")
-        data_schema_config = self.build_data_schema(manager.devices)
-        # If there is no user input or there were errors, show the form again, including any errors that were found
-        # with the input.
-        return self.async_show_form(
-            step_id="config",
-            data_schema=data_schema_config,
-            errors=errors,
-        )
+            if not manager.devices:
+                return self.async_abort(reason="no_devices_found")
+            data_schema_config = self.build_data_schema(manager.devices)
+            # If there is no user input or there were errors, show the form again, including any errors that were found
+            # with the input.
+            return self.async_show_form(
+                step_id="config",
+                data_schema=data_schema_config,
+                errors=errors,
+            )
+        finally:
+            await api.async_close()
 
     async def async_step_reauth(self, user_input=None):
         self.reauth_entry = self.hass.config_entries.async_get_entry(
@@ -378,47 +381,50 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         api = HomePilotApi(
             self.host, self.password, self.api_version
         )  # password can be empty if not defined ("")
-        # Check if include non executable scenes is enabled
-        include_non_manual = self.config_entry.options.get(CONF_INCLUDE_NON_EXECUTABLE_SCENES, False)
-        manager = await HomePilotManager.async_build_manager(api, include_non_manual_executable=include_non_manual)
-        self.mac_address = format_mac(await manager.get_hub_macaddress())
-        self.hostname = await manager.get_nodename()
-        if not manager.devices:
-            return self.async_abort(reason="no_devices_found")
+        try:
+            # Check if include non executable scenes is enabled
+            include_non_manual = self.config_entry.options.get(CONF_INCLUDE_NON_EXECUTABLE_SCENES, False)
+            manager = await HomePilotManager.async_build_manager(api, include_non_manual_executable=include_non_manual)
+            self.mac_address = format_mac(await manager.get_hub_macaddress())
+            self.hostname = await manager.get_nodename()
+            if not manager.devices:
+                return self.async_abort(reason="no_devices_found")
 
-        if CONF_EXCLUDE in self.config_entry.options:
-            previous_excluded_devices = self.config_entry.options[CONF_EXCLUDE]
-        elif CONF_DEVICES in self.config_entry.options:
-            previous_excluded_devices = [
-                did
-                for did in manager.devices
-                if did not in self.config_entry.options[CONF_DEVICES]
-            ]
-        else:
-            previous_excluded_devices = []
-        if CONF_SENSOR_TYPE in self.config_entry.options:
-            previous_ternary_contact_sensors = self.config_entry.options[
-                CONF_SENSOR_TYPE
-            ]
-        else:
-            previous_ternary_contact_sensors = []
+            if CONF_EXCLUDE in self.config_entry.options:
+                previous_excluded_devices = self.config_entry.options[CONF_EXCLUDE]
+            elif CONF_DEVICES in self.config_entry.options:
+                previous_excluded_devices = [
+                    did
+                    for did in manager.devices
+                    if did not in self.config_entry.options[CONF_DEVICES]
+                ]
+            else:
+                previous_excluded_devices = []
+            if CONF_SENSOR_TYPE in self.config_entry.options:
+                previous_ternary_contact_sensors = self.config_entry.options[
+                    CONF_SENSOR_TYPE
+                ]
+            else:
+                previous_ternary_contact_sensors = []
 
-        previous_include_non_executable_scenes = self.config_entry.options.get(
-            CONF_INCLUDE_NON_EXECUTABLE_SCENES, False
-        )
-        previous_enable_scene_polling = self.config_entry.options.get(
-            CONF_ENABLE_CYCLIC_SCENE_POLLING, False
-        )
-        previous_create_scene_activation_entities = self.config_entry.options.get(
-            CONF_CREATE_SCENE_ACTIVATION_ENTITIES, False
-        )
+            previous_include_non_executable_scenes = self.config_entry.options.get(
+                CONF_INCLUDE_NON_EXECUTABLE_SCENES, False
+            )
+            previous_enable_scene_polling = self.config_entry.options.get(
+                CONF_ENABLE_CYCLIC_SCENE_POLLING, False
+            )
+            previous_create_scene_activation_entities = self.config_entry.options.get(
+                CONF_CREATE_SCENE_ACTIVATION_ENTITIES, False
+            )
 
-        data_schema_config = self.build_data_schema(
-            manager.devices, previous_excluded_devices, previous_ternary_contact_sensors,
-            previous_enable_scene_polling, previous_create_scene_activation_entities, previous_include_non_executable_scenes
-        )
+            data_schema_config = self.build_data_schema(
+                manager.devices, previous_excluded_devices, previous_ternary_contact_sensors,
+                previous_enable_scene_polling, previous_create_scene_activation_entities, previous_include_non_executable_scenes
+            )
 
-        return self.async_show_form(step_id="init", data_schema=data_schema_config)
+            return self.async_show_form(step_id="init", data_schema=data_schema_config)
+        finally:
+            await api.async_close()
 
     def build_data_schema(
         self, devices, previous_excluded_devices, previous_ternary_contact_sensors,
